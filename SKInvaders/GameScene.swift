@@ -9,9 +9,10 @@
 import SpriteKit
 import CoreMotion
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     let motionManager: CMMotionManager = CMMotionManager()
     var tapQueue: Array<Int> = []
+    var contactQueue = Array<SKPhysicsContact>()
     
     enum BulletType {
         case ShipFired
@@ -69,6 +70,7 @@ class GameScene: SKScene {
   override func didMoveToView(view: SKView) {
     motionManager.startAccelerometerUpdates()
     userInteractionEnabled = true
+    physicsWorld.contactDelegate = self
 
     if (!self.contentCreated) {
         physicsBody = SKPhysicsBody(edgeLoopFromRect: frame)
@@ -87,9 +89,21 @@ class GameScene: SKScene {
         
         switch bulletType {
         case .ShipFired:
+            bullet.physicsBody = SKPhysicsBody(rectangleOfSize: bullet.frame.size)
+            bullet.physicsBody!.dynamic = true
+            bullet.physicsBody!.affectedByGravity = false
+            bullet.physicsBody!.categoryBitMask = kShipFiredBulletCategory
+            bullet.physicsBody!.contactTestBitMask = kInvaderCategory
+            bullet.physicsBody!.collisionBitMask = 0x0
             bullet = SKSpriteNode(color: SKColor.greenColor(), size: kBulletSize)
             bullet.name = kShipFiredBulletName
         case .InvaderFired:
+            bullet.physicsBody = SKPhysicsBody(rectangleOfSize: bullet.frame.size)
+            bullet.physicsBody!.dynamic = true
+            bullet.physicsBody!.affectedByGravity = false
+            bullet.physicsBody!.categoryBitMask = kInvaderFiredBulletCategory
+            bullet.physicsBody!.contactTestBitMask = kShipCategory
+            bullet.physicsBody!.collisionBitMask = 0x0
             bullet = SKSpriteNode(color: SKColor.magentaColor(), size: kBulletSize)
             bullet.name = kInvaderFiredBulletName
             break;
@@ -234,6 +248,8 @@ class GameScene: SKScene {
     moveInvadersForUpdate(currentTime)
     processUserTapsForUpdate(currentTime)
     fireInvaderBulletsForUpdate(currentTime)
+    processContactsForUpdate(currentTime)
+
   }
   
   
@@ -265,6 +281,17 @@ class GameScene: SKScene {
             
             // 3
             self.timeOfLastMove = currentTime
+        }
+    }
+    
+    func processContactsForUpdate(currentTime: CFTimeInterval) {
+        
+        for contact in self.contactQueue {
+            self.handleContact(contact)
+            
+            if let index = (self.contactQueue as NSArray).indexOfObject(contact) as Int? {
+                self.contactQueue.removeAtIndex(index)
+            }
         }
     }
     
@@ -440,7 +467,42 @@ class GameScene: SKScene {
     // HUD Helpers
   
   // Physics Contact Helpers
-  
-  // Game End Helpers
+    func didBeginContact(contact: SKPhysicsContact) {
+        if contact as SKPhysicsContact? != nil {
+            self.contactQueue.append(contact)
+        }
+    }
+    
+    func handleContact(contact: SKPhysicsContact) {
+        //1
+        // Ensure you haven't already handled this contact and removed its nodes
+        if (contact.bodyA.node?.parent == nil || contact.bodyB.node?.parent == nil) {
+            return
+        }
+        
+        var nodeNames = [contact.bodyA.node!.name!, contact.bodyB.node!.name!]
+        
+        // 2
+        if (nodeNames as NSArray).containsObject(kShipName) && (nodeNames as NSArray).containsObject(kInvaderFiredBulletName) {
+            
+            // 3
+            // Invader bullet hit a ship
+            self.runAction(SKAction.playSoundFileNamed("ShipHit.wav", waitForCompletion: false))
+            
+            contact.bodyA.node!.removeFromParent()
+            contact.bodyB.node!.removeFromParent()
+            
+            
+        } else if ((nodeNames as NSArray).containsObject(kInvaderName) && (nodeNames as NSArray).containsObject(kShipFiredBulletName)) {
+            
+            // 4
+            // Ship bullet hit an invader
+            self.runAction(SKAction.playSoundFileNamed("InvaderHit.wav", waitForCompletion: false))
+            contact.bodyA.node!.removeFromParent()
+            contact.bodyB.node!.removeFromParent()
+            
+        }
+    }
+    // Game End Helpers
   
 }
