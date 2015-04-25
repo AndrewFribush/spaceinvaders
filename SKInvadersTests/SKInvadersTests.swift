@@ -2,9 +2,7 @@
 //  SKInvadersTests.swift
 //  SKInvadersTests
 //
-//  Created by Riccardo D'Antoni on 15/07/14.
-//  Copyright (c) 2014 Razeware. All rights reserved.
-//
+
 
 import XCTest
 
