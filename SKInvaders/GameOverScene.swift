@@ -2,12 +2,11 @@
 //  GameOverScene.swift
 //  SKInvaders
 
-
 import UIKit
 import SpriteKit
 
 class GameOverScene: SKScene {
-   
+    
     // Private GameScene Properties
     
     var contentCreated = false
@@ -44,29 +43,27 @@ class GameOverScene: SKScene {
         
         // black space color
         self.backgroundColor = SKColor.blackColor()
-
+        
     }
-    
-
     
     override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         
     }
     
-    override func touchesMoved(touches: Set<NSObject>, withEvent event: UIEvent)  {
+    override func touchesMoved(touches: Set<NSObject>, withEvent event: UIEvent) {
         
     }
-
+    
     override func touchesCancelled(touches: Set<NSObject>, withEvent event: UIEvent) {
         
     }
     
-    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent)  {
+    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         
         let gameScene = GameScene(size: self.size)
         gameScene.scaleMode = .AspectFill
         
-        self.view?.presentScene(gameScene, transition: SKTransition.doorsCloseHorizontalWithDuration(1.0))
+        self.view!.presentScene(gameScene, transition: SKTransition.doorsCloseHorizontalWithDuration(1.0))
         
     }
 }
